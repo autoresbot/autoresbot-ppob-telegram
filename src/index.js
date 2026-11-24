@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { Telegraf } from 'telegraf';
 import { config, VERSION } from './config.js';
 import './db.js';
@@ -6,6 +8,17 @@ import { createWorker } from './worker.js';
 import { registerHandlers } from './bot.js';
 import { startJobs } from './jobs.js';
 import { configComplete, setupReportText, setupReportHtml } from './setup.js';
+
+// Penanda bot sedang berjalan (dipakai `npm run reset` agar tidak menghapus database yang sedang dipakai)
+const PID_FILE = path.join(path.dirname(path.resolve(config.dbPath)), 'bot.pid');
+fs.writeFileSync(PID_FILE, String(process.pid));
+process.on('exit', () => {
+  try {
+    if (fs.readFileSync(PID_FILE, 'utf8') === String(process.pid)) fs.unlinkSync(PID_FILE);
+  } catch {
+    // sudah terhapus
+  }
+});
 
 const bot = new Telegraf(config.botToken, { handlerTimeout: 60_000 });
 const worker = createWorker(bot);

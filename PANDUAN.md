@@ -237,6 +237,7 @@ Autoresbot menolak pembelian nominal yang sama ke nomor yang sama dalam waktu be
 ### Perawatan
 
 - **Backup database.** Semua saldo pelanggan ada di `data/bot.db`. Bot membuat backup harian otomatis di `data/backup/`, tetapi folder itu ada di server yang sama. Simpan juga salinan di tempat lain secara rutin, misalnya dengan `/backup` lalu simpan filenya.
+- **Reset ke kondisi baru.** Hentikan bot, lalu jalankan `npm run reset` di folder bot. Semua pelanggan, saldo, transaksi, deposit, markup, teks pembayaran, dan QRIS dihapus, sehingga **saldo pelanggan hilang**. Pakai hanya untuk uji coba atau memulai toko dari awal. Data lama tetap disalin ke `data/backup/sebelum-reset-*` kecuali Anda memakai `npm run reset -- --semua`.
 - **Memulihkan backup.** Hentikan bot, hapus `data/bot.db`, `bot.db-wal`, dan `bot.db-shm`, salin file backup menjadi `data/bot.db`, lalu jalankan bot lagi.
 - **Jangan bagikan** file `.env` dan file dashboard yang tersimpan (`API Pulsa & Game.html`); keduanya berisi data akun. Bila API key bocor, ganti di dashboard Autoresbot.
 - **Versi bot** bisa dicek dengan `/versi`. Daftar perubahan tiap versi ada di [CHANGELOG.md](CHANGELOG.md).

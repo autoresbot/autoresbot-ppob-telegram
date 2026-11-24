@@ -7,7 +7,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning src/index.js",
-    "dev": "node --disable-warning=ExperimentalWarning --watch src/index.js"
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/index.js",
+    "reset": "node --disable-warning=ExperimentalWarning scripts/reset.js"
   },
   "engines": {
     "node": ">=22.13"

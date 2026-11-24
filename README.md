@@ -102,6 +102,16 @@ data/bot.db    database (dibuat otomatis)
 data/backup/   backup harian
 ```
 
+## Reset ke kondisi baru
+
+```bash
+npm run reset                # hapus database & QRIS (backup otomatis dulu)
+npm run reset -- --semua     # sekaligus hapus semua backup: benar-benar dari nol
+npm run reset -- --yes       # tanpa pertanyaan konfirmasi
+```
+
+Yang dihapus: `data/bot.db` (pelanggan, saldo, transaksi, deposit, pengaturan markup & teks pembayaran) dan `assets/qris.jpg`. File `.env`, `assets/qris-contoh.jpg`, dan kode tidak disentuh. Sebelum menghapus, skrip menyalin data ke `data/backup/sebelum-reset-*` (kecuali dengan `--semua`), meminta Anda mengetik `RESET`, dan menolak berjalan bila bot masih menyala.
+
 ## Versi & rilis
 
 Versi bot ada di `package.json` (saat ini mulai dari `0.1.0`) dan tampil di konsol saat bot berjalan, di `/admin`, `/stat`, dan `/versi`. Riwayat perubahan ada di [CHANGELOG.md](CHANGELOG.md).

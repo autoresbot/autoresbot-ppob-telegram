@@ -11,6 +11,10 @@ Selama versi masih `0.x`, bot dianggap tahap awal dan perilakunya masih bisa ber
 
 ## [Belum dirilis]
 
+### Ditambahkan
+- `npm run reset`: kembalikan bot ke kondisi baru (hapus database & QRIS), dengan konfirmasi, backup otomatis, dan cek bot sedang berjalan. `--semua` untuk ikut menghapus backup
+- Bot menulis `data/bot.pid` saat berjalan
+
 ## [0.1.0] - 2026-11-24
 
 Versi awal.
