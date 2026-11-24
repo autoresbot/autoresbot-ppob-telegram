@@ -1,1 +1,0 @@
-saya ingin membangun bot telegram dengan referensi api dari https://autoresbot.com/dashboard/ppob/api buka dari edge browser ini karena sudah login
