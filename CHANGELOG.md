@@ -17,6 +17,11 @@ Selama versi masih `0.x`, bot dianggap tahap awal dan perilakunya masih bisa ber
 - `/laporan minggu` (sejak Senin) dan `/laporan semua` (rincian per bulan), serta tombol pindah periode & 🔄 Perbarui
 - Laporan menampilkan margin laba (%) dan rata-rata nilai per transaksi
 
+### Diperbaiki
+- Validasi nomor/ID tujuan kini memakai aturan resmi dari API (`isian`: label, pola, contoh) per produk, sehingga isian yang salah ditolak sebelum dibayar (mis. Aktivasi Voucher wajib nomor HP). Validasi lama dipakai sebagai cadangan bila detail produk tidak bisa diambil
+- Isian dua bagian untuk game ber-ID tunggal (mis. `12345678 1234` di Magic Chess) tidak lagi digabung diam-diam; pelanggan diminta menulis tanpa spasi
+- Info cut off tampil "[object Object]": format `cut_off` dari API ternyata objek `{mulai, selesai}`
+
 ### Diubah
 - `/laporan` tanpa argumen sekarang menampilkan **hari ini** (sebelumnya 7 hari terakhir); batas `/laporan N` naik dari 90 menjadi 365 hari
 

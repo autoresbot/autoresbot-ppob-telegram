@@ -7,7 +7,7 @@ import * as payment from './payment.js';
 import * as store from './db.js';
 import * as catalog from './catalog.js';
 import { ppob } from './ppob.js';
-import { parseTujuan, HINTS } from './validate.js';
+import { parseTujuan, parseByIsian, normalizeIsian, isianHint, HINTS } from './validate.js';
 import { createBackup } from './jobs.js';
 import { esc, rp, fmtDate, chunk, STATUS_LABEL } from './format.js';
 
@@ -62,6 +62,13 @@ setInterval(() => {
   for (const [k, h] of hits) if (t - h.start > RATE.windowMs) hits.delete(k);
   for (const [k, s] of sessions) if (t - s.at > SESSION_TTL) sessions.delete(k);
 }, 60_000).unref();
+
+/** cut_off dari API: { mulai: "23:45", selesai: "00:15" } (selesai bisa "null"), atau null */
+const fmtCutOff = (co) => {
+  const ok = (v) => v && v !== 'null';
+  if (!co || typeof co !== 'object' || !ok(co.mulai)) return '';
+  return ok(co.selesai) ? `${co.mulai}–${co.selesai}` : `mulai ${co.mulai}`;
+};
 
 const MUT_LABEL = { deposit: '➕ Deposit', purchase: '🛒 Beli', refund: '↩️ Refund', admin: '🛠 Koreksi admin' };
 
@@ -315,7 +322,8 @@ export function registerHandlers(bot, worker) {
     const p = catalog.bySku(ctx.match[1]);
     if (!p) return ctx.answerCbQuery('Produk tidak ditemukan, buka ulang menu.', { show_alert: true });
     if (!p.tersedia) {
-      return ctx.answerCbQuery(`Produk sedang cut off / gangguan${p.cut_off ? ` (${p.cut_off} WIB)` : ''}.`, {
+      const co = fmtCutOff(p.cut_off);
+      return ctx.answerCbQuery(`Produk sedang cut off / gangguan${co ? ` (cut off ${co} WIB)` : ''}.`, {
         show_alert: true,
       });
     }
@@ -325,13 +333,15 @@ export function registerHandlers(bot, worker) {
     try {
       info = await ppob.detailProduk(p.sku, 8_000);
     } catch {
-      // detail opsional; lanjut dengan data katalog
+      // detail opsional; lanjut dengan validasi cadangan
     }
+    // Utamakan aturan isian resmi dari API (label + pola); bila tidak ada, tebak dari kategori/brand
+    const fields = normalizeIsian(info?.isian);
     const kind = catalog.kindOf(p);
-    const needZone = kind === 'ml' || /zone/i.test(JSON.stringify(info?.isian ?? ''));
-    setSession(ctx.from.id, { step: 'tujuan', sku: p.sku, kind, needZone });
+    const needZone = fields ? fields.length > 1 : kind === 'ml';
+    setSession(ctx.from.id, { step: 'tujuan', sku: p.sku, kind, needZone, fields });
 
-    const hint = needZone ? HINTS.zone : HINTS[kind];
+    const hint = fields ? isianHint(fields) : needZone ? HINTS.zone : HINTS[kind];
     return ctx.reply(
       `📦 <b>${esc(p.nama)}</b>\nHarga: <b>${rp(catalog.sellPrice(p.harga))}</b>` +
         (info?.deskripsi ? `\n<i>${esc(info.deskripsi)}</i>` : '') +
@@ -947,7 +957,7 @@ export function registerHandlers(bot, worker) {
         sessions.delete(uid);
         return ctx.reply('Produk tidak ditemukan, silakan pilih ulang.', MAIN_MENU);
       }
-      const parsed = parseTujuan(text, s.kind, s.needZone);
+      const parsed = s.fields ? parseByIsian(text, s.fields) : parseTujuan(text, s.kind, s.needZone);
       if (parsed.error) return ctx.reply(parsed.error, { ...HTML, ...CANCEL_KB });
 
       const next = {
