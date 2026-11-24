@@ -125,7 +125,7 @@ Ketik `/admin` di bot untuk melihat daftar perintah.
 | Sesekali | `/deposits`: lihat deposit yang masih menunggu konfirmasi |
 | Sesekali | `/pending`: lihat transaksi yang belum selesai. Yang berumur lebih dari 1 jam layak dicek dengan `/cektrx` |
 | Akhir hari | `/stat`: omzet dan laba hari ini (dihitung dari pukul 00.00 WIB) |
-| Akhir minggu/bulan | `/laporan 7` atau `/laporan bulan`: rekap per hari & produk terlaris |
+| Akhir minggu/bulan | `/laporan minggu`, `/laporan bulan`, atau `/laporan semua`: rekap per hari/bulan & produk terlaris |
 
 ### Daftar perintah admin
 
@@ -153,11 +153,23 @@ DANA 081234567890 a.n. Toko Saya
 | Perintah | Fungsi |
 |---|---|
 | `/stat` | Jumlah pelanggan, total saldo pelanggan, transaksi sukses, omzet & laba hari ini, transaksi berjalan |
-| `/laporan [n/hari/bulan]` | Rekap omzet, laba, transaksi gagal, deposit diterima, pelanggan baru, rincian per hari & 5 produk terlaris. `/laporan` = 7 hari terakhir, `/laporan 30` = 30 hari, `/laporan hari` = hari ini, `/laporan bulan` = sejak tanggal 1 |
+| `/laporan [periode]` | Rekap omzet, laba & margin, rata-rata per transaksi, transaksi gagal, deposit diterima, pelanggan baru, rincian per periode & 5 produk terlaris. Di bawah laporan ada tombol untuk pindah periode dan 🔄 Perbarui |
 | `/saldopusat` | Saldo akun Autoresbot |
 | `/markup` | Lihat markup saat ini |
 | `/markup <flat> [persen]` | Ubah markup. Contoh: `/markup 1000` (Rp1.000 per produk) atau `/markup 500 2` (Rp500 + 2%) |
 | `/refresh` | Muat ulang daftar produk & harga dari Autoresbot sekarang |
+
+Periode `/laporan`:
+
+| Ketik | Periode | Rincian |
+|---|---|---|
+| `/laporan` atau `/laporan hari` | Hari ini, sejak 00.00 WIB | — |
+| `/laporan minggu` | Minggu ini, sejak Senin 00.00 WIB | per hari |
+| `/laporan bulan` | Bulan ini, sejak tanggal 1 | per hari |
+| `/laporan semua` | Sejak transaksi pertama | per bulan |
+| `/laporan 30` | N hari terakhir (1–365) | per hari; per bulan bila lebih dari 62 hari |
+
+Bisa juga ditulis `harian`, `mingguan`, `bulanan`.
 
 **Pelanggan**
 
@@ -247,5 +259,5 @@ Autoresbot menolak pembelian nominal yang sama ke nomor yang sama dalam waktu be
 ### Batasan yang perlu diketahui
 
 - Konfirmasi deposit masih **manual**; tidak ada pengecekan mutasi bank otomatis.
-- Laporan maksimal 90 hari ke belakang, dan rincian per hari menampilkan 31 hari terakhir.
+- Rincian laporan menampilkan maksimal 31 baris terakhir (31 hari atau 31 bulan); total di atasnya tetap mencakup seluruh periode.
 - Bot hanya melayani **chat pribadi**; pesan di grup diabaikan.

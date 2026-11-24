@@ -297,16 +297,27 @@ export function startOfMonthWib() {
   return d.getTime() - WIB;
 }
 
-/** Rekap sejak `since` (ms): per hari (WIB), total, produk terlaris, deposit. */
-export function report(since) {
-  const day = `strftime('%Y-%m-%d', created_at / 1000 + ${WIB / 1000}, 'unixepoch')`;
+/** Awal minggu WIB (Senin 00.00) dalam ms. */
+export function startOfWeekWib() {
+  const dow = new Date(Date.now() + WIB).getUTCDay(); // 0 = Minggu
+  return startOfDayWib((dow + 6) % 7);
+}
+
+/**
+ * Rekap sejak `since` (ms; 0 = semua): rincian per hari/bulan (WIB), total, produk terlaris, deposit.
+ * group: 'day' (YYYY-MM-DD) | 'month' (YYYY-MM)
+ */
+export function report(since, { group = 'day' } = {}) {
+  const fmt = group === 'month' ? '%Y-%m' : '%Y-%m-%d';
+  const period = `strftime('${fmt}', created_at / 1000 + ${WIB / 1000}, 'unixepoch')`;
   return {
     days: db
       .prepare(
-        `SELECT ${day} AS hari, COUNT(*) AS n, SUM(harga_jual) AS omzet, SUM(harga_jual - harga_modal) AS laba
+        `SELECT ${period} AS hari, COUNT(*) AS n, SUM(harga_jual) AS omzet, SUM(harga_jual - harga_modal) AS laba
          FROM transactions WHERE status = 'success' AND created_at >= ? GROUP BY hari ORDER BY hari`,
       )
       .all(since),
+    first: db.prepare('SELECT MIN(created_at) AS t FROM transactions WHERE created_at >= ?').get(since).t,
     total: db
       .prepare(
         `SELECT COUNT(*) AS n, COALESCE(SUM(harga_jual),0) AS omzet, COALESCE(SUM(harga_jual - harga_modal),0) AS laba

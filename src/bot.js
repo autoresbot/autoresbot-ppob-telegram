@@ -448,7 +448,7 @@ export function registerHandlers(bot, worker) {
           `/addsaldo &lt;user_id&gt; &lt;jumlah&gt; — tambah/kurangi saldo (minus untuk kurangi)\n` +
           `/user &lt;user_id&gt; — info pelanggan\n` +
           `/markup [flat] [persen] — lihat/ubah keuntungan\n` +
-          `/laporan [hari|bulan] — rekap omzet & laba (default 7 hari)\n` +
+          `/laporan [hari|minggu|bulan|semua] — rekap omzet & laba\n` +
           `/mutasi &lt;user_id&gt; — mutasi saldo pelanggan\n` +
           `/deposits — deposit menunggu konfirmasi\n` +
           `/pending — transaksi yang belum selesai\n` +
@@ -707,48 +707,110 @@ export function registerHandlers(bot, worker) {
   bot.command('refund', manualCmd('refund'));
   bot.command('sukses', manualCmd('success'));
 
+  /* ----- laporan: hari ini / minggu ini / bulan ini / semua / N hari ----- */
+
+  const LAP_ALIAS = {
+    hari: 'hari', harian: 'hari', hariini: 'hari', today: 'hari',
+    minggu: 'minggu', mingguan: 'minggu', mingguini: 'minggu', week: 'minggu',
+    bulan: 'bulan', bulanan: 'bulan', bulanini: 'bulan', month: 'bulan',
+    semua: 'semua', all: 'semua', total: 'semua',
+  };
+  const LAP_BUTTONS = [
+    ['hari', 'Hari ini'],
+    ['minggu', 'Minggu ini'],
+    ['bulan', 'Bulan ini'],
+    ['semua', 'Semua'],
+  ];
+  const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const fmtTgl = (ms) =>
+    new Date(ms).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric' });
+
+  /** period: 'hari' | 'minggu' | 'bulan' | 'semua' | angka hari (1–365). Mengembalikan null bila tidak valid. */
+  function laporanView(period) {
+    let since;
+    let title;
+    let group = 'day';
+    let perPeriod = true;
+    if (period === 'hari') {
+      [since, title, perPeriod] = [store.startOfDayWib(), 'Hari ini', false];
+    } else if (period === 'minggu') {
+      [since, title] = [store.startOfWeekWib(), 'Minggu ini'];
+    } else if (period === 'bulan') {
+      [since, title] = [store.startOfMonthWib(), 'Bulan ini'];
+    } else if (period === 'semua') {
+      [since, title, group] = [0, 'Semua waktu', 'month'];
+    } else {
+      const n = Number(period);
+      if (!Number.isInteger(n) || n < 1 || n > 365) return null;
+      [since, title] = [store.startOfDayWib(n - 1), `${n} hari terakhir`];
+      if (n > 62) group = 'month';
+    }
+
+    const r = store.report(since, { group });
+    const rows = r.days.slice(-31); // batas panjang pesan Telegram
+    const label = (k) => (group === 'month' ? `${BULAN[Number(k.slice(5, 7)) - 1]} ${k.slice(0, 4)}` : `${k.slice(8, 10)}/${k.slice(5, 7)}`);
+    const range =
+      period === 'semua'
+        ? r.first
+          ? `sejak transaksi pertama ${fmtTgl(r.first)}`
+          : 'belum ada transaksi'
+        : period === 'hari'
+          ? fmtTgl(since)
+          : `${fmtTgl(since)} – hari ini`;
+    const margin = r.total.omzet
+      ? ` (${((r.total.laba / r.total.omzet) * 100).toLocaleString('id-ID', { maximumFractionDigits: 1 })}%)`
+      : '';
+    const avg = r.total.n ? `\nRata-rata per transaksi: ${rp(Math.round(r.total.omzet / r.total.n))}` : '';
+
+    const text =
+      `📈 <b>Laporan — ${title}</b>\n<i>${range}</i>\n\n` +
+      `Transaksi sukses: <b>${r.total.n}</b> • gagal/refund: ${r.gagal}\n` +
+      `Omzet: <b>${rp(r.total.omzet)}</b>\nLaba: <b>${rp(r.total.laba)}</b>${margin}${avg}\n` +
+      `Deposit diterima: ${r.deposit.n}× • ${rp(r.deposit.total)}\n` +
+      `Pelanggan baru: ${r.userBaru}\n` +
+      (perPeriod && rows.length
+        ? `\n<b>Per ${group === 'month' ? 'bulan' : 'hari'}</b>${r.days.length > rows.length ? ' (31 terakhir)' : ''}\n` +
+          rows.map((d) => `${label(d.hari)}: ${d.n} trx • ${rp(d.omzet)} • laba ${rp(d.laba)}`).join('\n') +
+          '\n'
+        : '') +
+      (r.top.length
+        ? `\n<b>Produk terlaris</b>\n` +
+          r.top.map((p, i) => `${i + 1}. ${esc(p.produk)} — ${p.n}× • laba ${rp(p.laba)}`).join('\n') +
+          '\n'
+        : '') +
+      `\n<i>Diperbarui ${fmtDate(Date.now())} WIB</i>`;
+
+    const kb = Markup.inlineKeyboard([
+      LAP_BUTTONS.slice(0, 2).map(([k, t]) => Markup.button.callback(k === period ? `• ${t} •` : t, `lap:${k}`)),
+      LAP_BUTTONS.slice(2).map(([k, t]) => Markup.button.callback(k === period ? `• ${t} •` : t, `lap:${k}`)),
+      [Markup.button.callback('🔄 Perbarui', `lap:${period}`)],
+    ]);
+    return { text, kb };
+  }
+
   bot.command(
     'laporan',
     adminOnly((ctx) => {
-      const arg = (ctx.args[0] ?? '7').toLowerCase();
-      let since;
-      let title;
-      if (arg === 'bulan') {
-        since = store.startOfMonthWib();
-        title = 'Bulan ini';
-      } else if (arg === 'hari' || arg === 'hariini') {
-        since = store.startOfDayWib();
-        title = 'Hari ini';
-      } else {
-        const n = Number(arg);
-        if (!Number.isInteger(n) || n < 1 || n > 90) {
-          return ctx.reply('Format: /laporan [jumlah hari 1–90 | hari | bulan]\nContoh: /laporan 30');
-        }
-        since = store.startOfDayWib(n - 1);
-        title = `${n} hari terakhir`;
+      const arg = (ctx.args[0] ?? 'hari').toLowerCase();
+      const v = laporanView(LAP_ALIAS[arg] ?? arg);
+      if (!v) {
+        return ctx.reply(
+          'Format: <code>/laporan [hari | minggu | bulan | semua | jumlah hari]</code>\n' +
+            'Contoh: <code>/laporan minggu</code>, <code>/laporan 30</code>',
+          HTML,
+        );
       }
-      const r = store.report(since);
-      const days = r.days.slice(-31); // batas panjang pesan Telegram
-      const fmtDay = (d) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
-      return ctx.reply(
-        `📈 <b>Laporan — ${title}</b>\n(sejak ${fmtDate(since)} WIB)\n\n` +
-          `Transaksi sukses: <b>${r.total.n}</b> • gagal/refund: ${r.gagal}\n` +
-          `Omzet: <b>${rp(r.total.omzet)}</b>\nLaba: <b>${rp(r.total.laba)}</b>\n` +
-          `Deposit diterima: ${r.deposit.n}× • ${rp(r.deposit.total)}\n` +
-          `Pelanggan baru: ${r.userBaru}\n` +
-          (days.length
-            ? `\n<b>Per hari</b>${r.days.length > days.length ? ' (31 hari terakhir)' : ''}\n` +
-              days.map((d) => `${fmtDay(d.hari)}: ${d.n} trx • ${rp(d.omzet)} • laba ${rp(d.laba)}`).join('\n') +
-              '\n'
-            : '') +
-          (r.top.length
-            ? `\n<b>Produk terlaris</b>\n` +
-              r.top.map((p, i) => `${i + 1}. ${esc(p.produk)} — ${p.n}× • laba ${rp(p.laba)}`).join('\n')
-            : ''),
-        HTML,
-      );
+      return ctx.reply(v.text, { ...HTML, ...v.kb });
     }),
   );
+
+  bot.action(/^lap:(\w+)$/, async (ctx) => {
+    if (!isAdmin(ctx.from.id)) return ctx.answerCbQuery('Khusus admin', { show_alert: true });
+    const v = laporanView(ctx.match[1]);
+    if (!v) return ctx.answerCbQuery('Periode tidak valid');
+    await ctx.answerCbQuery();
+    return show(ctx, v.text, v.kb);
+  });
 
   bot.command(
     'backup',

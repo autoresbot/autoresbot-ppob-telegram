@@ -14,6 +14,11 @@ Selama versi masih `0.x`, bot dianggap tahap awal dan perilakunya masih bisa ber
 ### Ditambahkan
 - `npm run reset`: kembalikan bot ke kondisi baru (hapus database & QRIS), dengan konfirmasi, backup otomatis, dan cek bot sedang berjalan. `--semua` untuk ikut menghapus backup
 - Bot menulis `data/bot.pid` saat berjalan
+- `/laporan minggu` (sejak Senin) dan `/laporan semua` (rincian per bulan), serta tombol pindah periode & 🔄 Perbarui
+- Laporan menampilkan margin laba (%) dan rata-rata nilai per transaksi
+
+### Diubah
+- `/laporan` tanpa argumen sekarang menampilkan **hari ini** (sebelumnya 7 hari terakhir); batas `/laporan N` naik dari 90 menjadi 365 hari
 
 ## [0.1.0] - 2026-11-24
 
