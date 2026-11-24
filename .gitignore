@@ -1,0 +1,11 @@
+node_modules/
+.env
+data/
+*.log
+API Pulsa & Game_files/
+# Halaman dashboard tersimpan: berisi potongan API key & daftar IP whitelist akun
+API Pulsa & Game.html
+
+# QRIS asli milik toko (contoh tetap ikut repo)
+assets/qris.jpg
+assets/*.tmp

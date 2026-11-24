@@ -1,0 +1,18 @@
+{
+  "name": "ppob-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bot Telegram jualan pulsa, data, game & token PLN via API PPOB Autoresbot",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3"
+  }
+}
