@@ -101,3 +101,17 @@ src/
 data/bot.db    database (dibuat otomatis)
 data/backup/   backup harian
 ```
+
+## Versi & rilis
+
+Versi bot ada di `package.json` (saat ini mulai dari `0.1.0`) dan tampil di konsol saat bot berjalan, di `/admin`, `/stat`, dan `/versi`. Riwayat perubahan ada di [CHANGELOG.md](CHANGELOG.md).
+
+Cara merilis versi baru:
+
+1. Catat perubahan di bagian **[Belum dirilis]** pada `CHANGELOG.md`, lalu ubah judulnya menjadi nomor versi baru beserta tanggalnya
+2. Naikkan versi sekaligus buat commit & tag git:
+   ```bash
+   npm version patch   # 0.1.0 → 0.1.1  (perbaikan bug)
+   npm version minor   # 0.1.0 → 0.2.0  (fitur baru)
+   ```
+3. Restart bot di server

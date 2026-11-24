@@ -1,4 +1,8 @@
 import process from 'node:process';
+import fs from 'node:fs';
+
+/** Versi bot, diambil dari package.json (satu sumber kebenaran) */
+export const VERSION = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 
 try {
   process.loadEnvFile();

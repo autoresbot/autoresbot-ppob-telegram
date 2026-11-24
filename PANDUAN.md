@@ -185,6 +185,7 @@ ID pelanggan terlihat di pesan deposit, atau pelanggan bisa melihatnya sendiri l
 
 | Perintah | Fungsi |
 |---|---|
+| `/versi` | Versi bot, versi Node.js, dan sejak kapan bot berjalan |
 | `/backup` | Buat backup database sekarang dan kirim filenya ke chat Anda. File ini rahasia (berisi saldo pelanggan) |
 
 ### Menyelesaikan transaksi secara manual (`/refund`, `/sukses`)
@@ -238,6 +239,7 @@ Autoresbot menolak pembelian nominal yang sama ke nomor yang sama dalam waktu be
 - **Backup database.** Semua saldo pelanggan ada di `data/bot.db`. Bot membuat backup harian otomatis di `data/backup/`, tetapi folder itu ada di server yang sama. Simpan juga salinan di tempat lain secara rutin, misalnya dengan `/backup` lalu simpan filenya.
 - **Memulihkan backup.** Hentikan bot, hapus `data/bot.db`, `bot.db-wal`, dan `bot.db-shm`, salin file backup menjadi `data/bot.db`, lalu jalankan bot lagi.
 - **Jangan bagikan** file `.env` dan file dashboard yang tersimpan (`API Pulsa & Game.html`); keduanya berisi data akun. Bila API key bocor, ganti di dashboard Autoresbot.
+- **Versi bot** bisa dicek dengan `/versi`. Daftar perubahan tiap versi ada di [CHANGELOG.md](CHANGELOG.md).
 - **Restart** diperlukan setelah mengubah `.env`. Perubahan lewat perintah bot (`/markup`, `/setqris`, `/setpayment`) langsung berlaku tanpa restart.
 - **Log.** Bila memakai PM2, lihat log dengan `pm2 logs ppob-bot`.
 

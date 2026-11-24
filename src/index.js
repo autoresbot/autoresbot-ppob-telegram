@@ -1,5 +1,5 @@
 import { Telegraf } from 'telegraf';
-import { config } from './config.js';
+import { config, VERSION } from './config.js';
 import './db.js';
 import * as catalog from './catalog.js';
 import { createWorker } from './worker.js';
@@ -19,7 +19,7 @@ startJobs(worker);
 
 bot
   .launch(() => {
-    console.log(`🤖 ${config.storeName} berjalan${configComplete() ? '' : ' (konfigurasi belum lengkap)'}`);
+    console.log(`🤖 ${config.storeName} v${VERSION} berjalan${configComplete() ? '' : ' (konfigurasi belum lengkap)'}`);
     bot.telegram.setMyCommands(commands).catch(() => {});
     // Beri tahu admin bila konfigurasi belum selesai
     if (!configComplete()) worker.alertAdmins(setupReportHtml());

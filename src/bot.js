@@ -1,7 +1,7 @@
 // Handler Telegram: menu pelanggan, alur beli, deposit, dan perintah admin
 import crypto from 'node:crypto';
 import { Markup, Input } from 'telegraf';
-import { config, isAdmin } from './config.js';
+import { config, isAdmin, VERSION } from './config.js';
 import { isReady, configComplete, setupReportHtml } from './setup.js';
 import * as payment from './payment.js';
 import * as store from './db.js';
@@ -437,7 +437,8 @@ export function registerHandlers(bot, worker) {
     'admin',
     adminOnly((ctx) =>
       ctx.reply(
-        `🛠 <b>Perintah Admin</b>\n\n` +
+        `🛠 <b>Perintah Admin</b> • v${VERSION}\n\n` +
+          `/versi — versi bot\n` +
           `/config — cek kelengkapan konfigurasi\n` +
           `/setqris — ganti gambar QRIS • /hapusqris\n` +
           `/setpayment &lt;teks&gt; — ganti teks rekening / e-wallet\n` +
@@ -458,6 +459,17 @@ export function registerHandlers(bot, worker) {
           `/backup — kirim file backup database\n` +
           `/ban &lt;user_id&gt; • /unban &lt;user_id&gt;\n` +
           `/bc &lt;pesan&gt; — broadcast ke semua pelanggan`,
+        HTML,
+      ),
+    ),
+  );
+
+  bot.command(
+    'versi',
+    adminOnly((ctx) =>
+      ctx.reply(
+        `🤖 <b>${esc(config.storeName)}</b>\nVersi bot: <b>v${VERSION}</b>\nNode.js: ${process.version}\n` +
+          `Berjalan sejak: ${fmtDate(Date.now() - process.uptime() * 1000)} WIB`,
         HTML,
       ),
     ),
@@ -529,6 +541,7 @@ export function registerHandlers(bot, worker) {
           `Transaksi sukses hari ini: ${s.today.n}\nOmzet: ${rp(s.today.omzet)} • Laba: ${rp(s.today.laba)}\n` +
           `Transaksi berjalan: ${s.pending}\n` +
           `Markup: ${rp(m.flat)} + ${m.percent}%\n` +
+          `Versi bot: v${VERSION}\n` +
           `Produk: ${catalog.categories().length} kategori, diperbarui ${catalog.updatedAt ? fmtDate(catalog.updatedAt) : '-'}`,
         HTML,
       );
