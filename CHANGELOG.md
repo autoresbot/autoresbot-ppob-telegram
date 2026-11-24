@@ -16,6 +16,10 @@ Selama versi masih `0.x`, bot dianggap tahap awal dan perilakunya masih bisa ber
 - Bot menulis `data/bot.pid` saat berjalan
 - `/laporan minggu` (sejak Senin) dan `/laporan semua` (rincian per bulan), serta tombol pindah periode & 🔄 Perbarui
 - Laporan menampilkan margin laba (%) dan rata-rata nilai per transaksi
+- Info error detail khusus owner/admin: bila produk gagal dimuat (mis. `IP_NOT_WHITELISTED`), admin melihat kode error, pesan server, dan **langkah perbaikan** (mis. IP yang harus di-whitelist) di menu Beli, `/start`, `/config`, `/refresh`, `/saldopusat`, dan konsol. Pelanggan tetap melihat pesan umum
+- Notifikasi otomatis ke admin saat koneksi ke Autoresbot bermasalah (sekali per jenis error) dan saat pulih
+- Tombol 🔄 Coba lagi (admin) untuk memuat ulang produk; saat gagal bot mencoba ulang tiap 1 menit (sebelumnya 15 menit)
+- Bila admin sendiri yang membeli dan gagal, admin mendapat kode & pesan error asli dari server
 
 ### Diperbaiki
 - Validasi nomor/ID tujuan kini memakai aturan resmi dari API (`isian`: label, pola, contoh) per produk, sehingga isian yang salah ditolak sebelum dibayar (mis. Aktivasi Voucher wajib nomor HP). Validasi lama dipakai sebagai cadangan bila detail produk tidak bisa diambil

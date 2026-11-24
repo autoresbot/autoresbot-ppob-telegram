@@ -7,6 +7,7 @@ import * as catalog from './catalog.js';
 import { createWorker } from './worker.js';
 import { registerHandlers } from './bot.js';
 import { startJobs } from './jobs.js';
+import { apiProblemHtml } from './errors.js';
 import { configComplete, setupReportText, setupReportHtml } from './setup.js';
 
 // Penanda bot sedang berjalan (dipakai `npm run reset` agar tidak menghapus database yang sedang dipakai)
@@ -26,6 +27,14 @@ const { commands } = registerHandlers(bot, worker);
 
 console.log(setupReportText());
 
+// Beri tahu admin saat koneksi ke Autoresbot bermasalah (sekali per jenis error) dan saat pulih
+catalog.onStatusChange((err) =>
+  worker.alertAdmins(
+    err
+      ? apiProblemHtml(err) + '\n\n<i>Pelanggan melihat "produk belum tersedia". Bot mencoba lagi otomatis tiap 1 menit.</i>'
+      : `✅ <b>Koneksi ke Autoresbot pulih</b>\n${catalog.categories().length} kategori produk siap dijual.`,
+  ),
+);
 catalog.startAutoRefresh();
 worker.start();
 startJobs(worker);

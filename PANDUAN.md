@@ -218,6 +218,8 @@ Contoh: `/sukses TG123456789-ABC123 1234-5678-9012-3456-7890 paksa`.
 
 ### Peringatan otomatis ke admin
 
+Bila bot gagal memuat produk (misalnya IP server belum di-whitelist), admin langsung mendapat pesan berisi **kode error, pesan dari server, dan tindakan yang harus dilakukan**. Informasi yang sama muncul saat admin membuka menu Beli, `/start`, atau `/config`, lengkap dengan tombol **🔄 Coba lagi**. Bot juga mencoba ulang sendiri tiap 1 menit dan mengirim pesan **✅ Koneksi pulih** setelah berhasil. Pelanggan hanya melihat "Daftar produk belum tersedia".
+
 Bot mengirim pesan **⚠️ PPOB error** bila ada masalah yang perlu tindakan Anda. Transaksi pelanggan yang terkena sudah otomatis gagal dan saldonya dikembalikan.
 
 | Kode | Artinya | Tindakan |

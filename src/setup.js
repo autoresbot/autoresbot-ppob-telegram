@@ -2,9 +2,21 @@
 import { config, staticIssues } from './config.js';
 import { hasPayment } from './payment.js';
 import { esc } from './format.js';
+import * as catalog from './catalog.js';
+import { adminAction } from './errors.js';
 
 export function getSetupIssues() {
   const list = [...staticIssues];
+  // Masalah koneksi API saat memuat produk (mis. IP belum di-whitelist)
+  const err = config.apiKey ? catalog.lastError : null;
+  if (err) {
+    list.push({
+      key: `API Autoresbot (${err.code})`,
+      message: err.message,
+      impact: 'Daftar produk & transaksi tidak bisa dipakai pelanggan',
+      action: adminAction(err), // HTML, hanya untuk admin
+    });
+  }
   if (!hasPayment()) {
     list.push({
       key: 'DEPOSIT_INFO / QRIS',
@@ -28,7 +40,11 @@ export function setupReportText() {
   if (!issues.length) return '✅ Konfigurasi lengkap.';
   return [
     '⚠️  KONFIGURASI BELUM SELESAI — bot tetap berjalan dengan fitur terbatas:',
-    ...issues.map((i) => `   • ${i.key}: ${i.message}\n     → ${i.impact}`),
+    ...issues.map(
+      (i) =>
+        `   • ${i.key}: ${i.message}\n     → ${i.impact}` +
+        (i.action ? `\n     👉 ${i.action.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&')}` : ''),
+    ),
     '   Lengkapi file .env lalu restart bot (data pembayaran bisa diatur dari Telegram).',
   ].join('\n');
 }
@@ -39,7 +55,13 @@ export function setupReportHtml() {
   if (!issues.length) return '✅ <b>Konfigurasi lengkap</b> — semua fitur aktif.';
   return (
     `⚙️ <b>Konfigurasi belum selesai</b>\nBot berjalan dengan fitur terbatas.\n\n` +
-    issues.map((i) => `• <code>${esc(i.key)}</code>: ${esc(i.message)}\n   → <i>${esc(i.impact)}</i>`).join('\n') +
+    issues
+      .map(
+        (i) =>
+          `• <code>${esc(i.key)}</code>: ${esc(i.message)}\n   → <i>${esc(i.impact)}</i>` +
+          (i.action ? `\n   👉 ${i.action}` : ''),
+      )
+      .join('\n') +
     `\n\nLengkapi file <code>.env</code> lalu restart bot. Data pembayaran bisa diatur langsung dengan /setqris dan /setpayment.`
   );
 }

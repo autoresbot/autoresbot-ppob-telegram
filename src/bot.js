@@ -9,6 +9,7 @@ import * as catalog from './catalog.js';
 import { ppob } from './ppob.js';
 import { parseTujuan, parseByIsian, normalizeIsian, isianHint, HINTS } from './validate.js';
 import { createBackup } from './jobs.js';
+import { apiProblemHtml } from './errors.js';
 import { esc, rp, fmtDate, chunk, STATUS_LABEL } from './format.js';
 
 const BTN = {
@@ -104,18 +105,23 @@ async function show(ctx, text, keyboard) {
 
 /* ---------- tampilan katalog ---------- */
 
-function categoriesView() {
+function categoriesView(admin = false) {
   const cats = catalog.categories();
   if (!cats.length) {
-    return { text: '⚠️ Daftar produk belum tersedia. Silakan coba lagi beberapa saat lagi.' };
+    if (!admin) return { text: '⚠️ Daftar produk belum tersedia. Silakan coba lagi beberapa saat lagi.' };
+    // Owner/admin: tampilkan penyebab & cara memperbaiki
+    const text = catalog.lastError
+      ? apiProblemHtml(catalog.lastError) + '\n\n<i>Bot mencoba lagi otomatis tiap 1 menit.</i>'
+      : '⏳ Daftar produk sedang dimuat. Tunggu sebentar lalu tekan Coba lagi.';
+    return { text, kb: Markup.inlineKeyboard([[Markup.button.callback('🔄 Coba lagi', 'retry_catalog')]]) };
   }
   const buttons = cats.map((c, i) => Markup.button.callback(c, `cat:${i}`));
   return { text: '🛒 <b>Pilih kategori</b>', kb: Markup.inlineKeyboard(chunk(buttons, 2)) };
 }
 
-function brandsView(ci) {
+function brandsView(ci, admin = false) {
   const cat = catalog.categories()[ci];
-  if (!cat) return categoriesView();
+  if (!cat) return categoriesView(admin);
   const buttons = catalog.brands(cat).map((b, bi) => Markup.button.callback(b, `br:${ci}:${bi}:0`));
   return {
     text: `🛒 <b>${esc(cat)}</b>\nPilih brand / operator:`,
@@ -209,7 +215,7 @@ export function registerHandlers(bot, worker) {
   const openBuy = (ctx) => {
     sessions.delete(ctx.from.id);
     if (!isReady.transaksi()) return replyNotReady(ctx, 'transaksi');
-    const v = categoriesView();
+    const v = categoriesView(isAdmin(ctx.from.id));
     return show(ctx, v.text, v.kb);
   };
   const openSaldo = (ctx) => {
@@ -306,7 +312,20 @@ export function registerHandlers(bot, worker) {
 
   bot.action(/^cat:(\d+)$/, async (ctx) => {
     await ctx.answerCbQuery();
-    const v = brandsView(Number(ctx.match[1]));
+    const v = brandsView(Number(ctx.match[1]), isAdmin(ctx.from.id));
+    return show(ctx, v.text, v.kb);
+  });
+
+  // Admin: muat ulang produk sekarang (mis. setelah menambah IP ke whitelist)
+  bot.action('retry_catalog', async (ctx) => {
+    if (!isAdmin(ctx.from.id)) return ctx.answerCbQuery('Khusus admin', { show_alert: true });
+    await ctx.answerCbQuery('Memuat ulang produk…');
+    try {
+      await catalog.refresh();
+    } catch {
+      // error tersimpan di catalog.lastError dan ditampilkan di bawah
+    }
+    const v = categoriesView(true);
     return show(ctx, v.text, v.kb);
   });
 
@@ -565,7 +584,7 @@ export function registerHandlers(bot, worker) {
         const d = await ppob.saldo();
         return ctx.reply(`🏦 Saldo Autoresbot: <b>${rp(d.saldo)}</b>`, HTML);
       } catch (e) {
-        return ctx.reply(`Gagal: ${e.code ?? ''} ${e.message}`);
+        return ctx.reply(apiProblemHtml(e, 'Gagal mengambil saldo Autoresbot'), HTML);
       }
     }),
   );
@@ -660,7 +679,7 @@ export function registerHandlers(bot, worker) {
         const n = await catalog.refresh();
         return ctx.reply(`✅ ${n} produk dimuat.`);
       } catch (e) {
-        return ctx.reply(`Gagal: ${e.code ?? ''} ${e.message}`);
+        return ctx.reply(apiProblemHtml(e), HTML);
       }
     }),
   );

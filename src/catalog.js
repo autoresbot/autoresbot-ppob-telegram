@@ -9,9 +9,28 @@ let skuMap = new Map();
 let brandMap = new Map(); // kategori -> Set(brand)
 let cats = [];
 export let updatedAt = 0;
+/** Error terakhir saat memuat produk ({ code, message, at }), null bila terakhir berhasil */
+export let lastError = null;
+
+const listeners = new Set();
+/** fn(err | null): dipanggil saat status berubah — gagal (kode baru) atau pulih */
+export const onStatusChange = (fn) => listeners.add(fn);
+const emit = (err) => listeners.forEach((fn) => Promise.resolve().then(() => fn(err)).catch(() => {}));
 
 export async function refresh() {
-  const data = await ppob.produk();
+  let data;
+  try {
+    data = await ppob.produk();
+  } catch (e) {
+    const changed = lastError?.code !== (e.code ?? 'UNKNOWN') || lastError?.message !== e.message;
+    lastError = { code: e.code ?? 'UNKNOWN', message: e.message, at: Date.now() };
+    if (changed) emit(lastError);
+    throw e;
+  }
+  if (lastError) {
+    lastError = null;
+    emit(null);
+  }
   const list = Array.isArray(data?.produk) ? data.produk : [];
   all = list;
   skuMap = new Map(list.map((p) => [p.sku, p]));
@@ -25,17 +44,23 @@ export async function refresh() {
   return list.length;
 }
 
-export function startAutoRefresh(intervalMs = 15 * 60 * 1000) {
+/** Muat ulang tiap 15 menit; saat gagal dicoba lagi tiap 1 menit agar cepat pulih setelah diperbaiki. */
+export function startAutoRefresh(intervalMs = 15 * 60 * 1000, retryMs = 60 * 1000) {
   if (!config.apiKey) {
     console.warn('[katalog] dilewati: AUTORESBOT_APIKEY belum diisi');
     return;
   }
-  const run = () =>
-    refresh()
-      .then((n) => console.log(`[katalog] ${n} produk dimuat`))
-      .catch((e) => console.error(`[katalog] gagal memuat produk: ${e.code ?? ''} ${e.message}`));
+  const run = async () => {
+    let ok = false;
+    try {
+      console.log(`[katalog] ${await refresh()} produk dimuat`);
+      ok = true;
+    } catch (e) {
+      console.error(`[katalog] gagal memuat produk: ${e.code ?? ''} ${e.message}`);
+    }
+    setTimeout(run, ok ? intervalMs : retryMs).unref();
+  };
   run();
-  setInterval(run, intervalMs).unref();
 }
 
 export const categories = () => cats;

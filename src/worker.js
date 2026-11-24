@@ -2,8 +2,8 @@
 import * as store from './db.js';
 import * as catalog from './catalog.js';
 import { ppob, PpobError } from './ppob.js';
-import { friendlyError, ADMIN_ALERT_CODES } from './errors.js';
-import { config } from './config.js';
+import { friendlyError, apiProblemHtml, ADMIN_ALERT_CODES } from './errors.js';
+import { config, isAdmin } from './config.js';
 import { esc, rp } from './format.js';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -79,10 +79,12 @@ export function createWorker(bot) {
     const t = store.finalizeTrx(ref, 'failed', { pesan: friendlyError(err) });
     notifyFinal(t);
     if (err.code === 'PRICE_CHANGED') catalog.refresh().catch(() => {});
+    const refLine = `\nRef: <code>${esc(ref)}</code>`;
     if (ADMIN_ALERT_CODES.has(err.code)) {
-      alertAdmins(
-        `⚠️ <b>PPOB error</b> <code>${esc(err.code)}</code>\n${esc(err.message)}\nRef: <code>${esc(ref)}</code>`,
-      );
+      alertAdmins(apiProblemHtml(err, 'Transaksi pelanggan gagal karena masalah akun/API') + refLine);
+    } else if (t && isAdmin(t.user_id)) {
+      // Owner/admin yang membeli: tampilkan alasan asli dari server, bukan hanya pesan ramah
+      send(t.user_id, apiProblemHtml(err, 'Detail error (khusus admin)') + refLine);
     }
     return t;
   }

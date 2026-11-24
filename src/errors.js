@@ -25,6 +25,48 @@ const MESSAGES = {
 
 export const friendlyError = (err) => MESSAGES[err?.code] || 'Transaksi gagal diproses.';
 
+const escHtml = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+
+/** Langkah perbaikan untuk pemilik bot berdasarkan error.code (HTML). */
+export function adminAction(err) {
+  const ip = String(err?.message ?? '').match(/\b\d{1,3}(?:\.\d{1,3}){3}\b|\b[0-9a-f]*:[0-9a-f:]+\b/i)?.[0];
+  switch (err?.code) {
+    case 'IP_NOT_WHITELISTED':
+      return (
+        `Tambahkan IP <code>${escHtml(ip ?? 'server bot')}</code> di Dashboard Autoresbot › <b>REST API › Whitelist IP</b> (maks. 10 IP).` +
+        `\nBila bot pindah server / IP berubah, daftarkan IP yang baru.`
+      );
+    case 'UNAUTHORIZED':
+      return 'API key salah. Salin ulang dari Dashboard Autoresbot › <b>Akun › API Key</b> ke <code>AUTORESBOT_APIKEY</code> di <code>.env</code> (tanpa kutip/spasi), lalu restart bot.';
+    case 'ACCOUNT_INACTIVE':
+      return 'Akun Autoresbot belum verifikasi email atau diblokir. Cek akun di dashboard Autoresbot.';
+    case 'API_DISABLED':
+      return 'API Pulsa &amp; Game sedang dinonaktifkan. Aktifkan di dashboard / hubungi Autoresbot.';
+    case 'INSUFFICIENT_BALANCE':
+      return 'Saldo pusat Autoresbot kurang. Isi saldo di dashboard Autoresbot.';
+    case 'CUT_OFF':
+      return 'Sedang cut off harian (23.30–00.30 WIB). Tidak perlu tindakan, bot mencoba lagi otomatis.';
+    case 'RATE_LIMITED':
+    case 'BUSY':
+    case 'SERVICE_CLOSED':
+    case 'SERVICE_UNAVAILABLE':
+    case 'INTERNAL_ERROR':
+      return 'Server Autoresbot sedang sibuk/gangguan. Biasanya pulih sendiri; bot mencoba lagi otomatis.';
+    case 'NETWORK_ERROR':
+    case 'INVALID_RESPONSE':
+      return 'Server bot tidak bisa terhubung ke autoresbot.com. Periksa koneksi internet / DNS / firewall server.';
+    default:
+      return 'Cek pesan error di atas dan log bot. Coba /refresh setelah diperbaiki.';
+  }
+}
+
+/** Ringkasan masalah koneksi API untuk admin (HTML). */
+export const apiProblemHtml = (err, title = 'Gagal memuat produk dari Autoresbot') =>
+  `⚠️ <b>${title}</b>\n` +
+  `Kode: <code>${escHtml(err?.code ?? 'UNKNOWN')}</code>\n` +
+  `${escHtml(err?.message ?? '')}\n\n` +
+  `👉 <b>Tindakan:</b> ${adminAction(err)}`;
+
 // Error yang butuh tindakan pemilik bot (bukan salah pelanggan)
 export const ADMIN_ALERT_CODES = new Set([
   'UNAUTHORIZED',
