@@ -1,8 +1,23 @@
 {
-  "name": "ppob-bot",
+  "name": "autoresbot-ppob-telegram",
   "version": "0.1.0",
   "private": true,
   "description": "Bot Telegram jualan pulsa, data, game & token PLN via API PPOB Autoresbot",
+  "keywords": [
+    "ppob",
+    "telegram-bot",
+    "telegraf",
+    "pulsa",
+    "paket-data",
+    "topup-game",
+    "token-pln",
+    "autoresbot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/autoresbot/autoresbot-ppob-telegram.git"
+  },
+  "homepage": "https://github.com/autoresbot/autoresbot-ppob-telegram#readme",
   "type": "module",
   "main": "src/index.js",
   "scripts": {

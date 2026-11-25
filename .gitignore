@@ -9,3 +9,9 @@ API Pulsa & Game.html
 # QRIS asli milik toko (contoh tetap ikut repo)
 assets/qris.jpg
 assets/*.tmp
+
+# Arsip & salinan proyek (bisa berisi .env / database)
+*.zip
+*.rar
+*.7z
+ppob_bot/
