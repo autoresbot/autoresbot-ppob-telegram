@@ -12,6 +12,7 @@ Selama versi masih `0.x`, bot dianggap tahap awal dan perilakunya masih bisa ber
 ## [Belum dirilis]
 
 ### Ditambahkan
+- `npm run zip`: buat zip source code siap bagi di `release/` (dari commit terakhir, tanpa `.env`/database/QRIS asli)
 - `npm run reset`: kembalikan bot ke kondisi baru (hapus database & QRIS), dengan konfirmasi, backup otomatis, dan cek bot sedang berjalan. `--semua` untuk ikut menghapus backup
 - Bot menulis `data/bot.pid` saat berjalan
 - `/laporan minggu` (sejak Senin) dan `/laporan semua` (rincian per bulan), serta tombol pindah periode & 🔄 Perbarui

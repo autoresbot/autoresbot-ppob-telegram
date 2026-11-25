@@ -125,6 +125,11 @@ Cara merilis versi baru:
    npm version minor   # 0.1.0 → 0.2.0  (fitur baru)
    ```
 3. Restart bot di server
+4. Buat zip source code untuk dibagikan / diupload ke web:
+   ```bash
+   npm run zip   # → release/autoresbot-ppob-telegram-v0.1.1.zip
+   ```
+   Zip diambil dari commit terakhir, jadi `.env`, `data/`, QRIS asli, dan `node_modules/` tidak ikut. Perubahan yang belum di-commit juga tidak ikut.
 
 ## Lisensi
 
