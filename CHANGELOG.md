@@ -11,6 +11,8 @@ Selama versi masih `0.x`, bot dianggap tahap awal dan perilakunya masih bisa ber
 
 ## [Belum dirilis]
 
+## [0.2.0] - 2026-11-25
+
 ### Ditambahkan
 - `npm run zip`: buat zip source code siap bagi di `release/` (dari commit terakhir, tanpa `.env`/database/QRIS asli)
 - `npm run reset`: kembalikan bot ke kondisi baru (hapus database & QRIS), dengan konfirmasi, backup otomatis, dan cek bot sedang berjalan. `--semua` untuk ikut menghapus backup
@@ -57,5 +59,6 @@ Versi awal.
 - Polling status (5 detik di menit pertama, lalu 30 detik) yang tetap berlanjut setelah restart
 - Backup database otomatis harian ke `data/backup/`
 
-[Belum dirilis]: #
-[0.1.0]: #
+[Belum dirilis]: https://github.com/autoresbot/autoresbot-ppob-telegram/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/autoresbot/autoresbot-ppob-telegram/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/autoresbot/autoresbot-ppob-telegram/releases/tag/v0.1.0
