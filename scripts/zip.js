@@ -12,7 +12,8 @@ import process from 'node:process';
 
 process.chdir(path.join(import.meta.dirname, '..'));
 
-const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+const git = (...args) =>
+  execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
 try {
   git('rev-parse', '--is-inside-work-tree');
