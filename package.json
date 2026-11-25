@@ -13,6 +13,7 @@
     "token-pln",
     "autoresbot"
   ],
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/autoresbot/autoresbot-ppob-telegram.git"

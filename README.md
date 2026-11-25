@@ -125,3 +125,7 @@ Cara merilis versi baru:
    npm version minor   # 0.1.0 → 0.2.0  (fitur baru)
    ```
 3. Restart bot di server
+
+## Lisensi
+
+[MIT](LICENSE) © Autoresbot
